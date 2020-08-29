@@ -18,14 +18,16 @@
                   <th>Name</th>
                   <th>Email</th>
                   <th>Type</th>
+                  <th>Date</th>
                   <th>Action</th>
                 </tr>
                 
-                <tr>
-                  <td>657</td>
-                  <td>Bob Doe</td>
-                  <td>11-7-2014</td>
-                  <td><span class="label label-primary">Approved</span></td>
+                <tr v-for="user in users" :key="user.id">
+                  <td>{{user.id}}</td>
+                  <td>{{user.name}}</td>
+                  <td>{{user.email}}</td>
+                  <td>{{user.type |upText}}</td>
+                  <td>{{user.created_at | mydate}}</td>
                   <td>
                     <a class="btn btn-info btn-sm" href=""><i class="fas fa-pencil-alt"></i> Edit</a>
                     <a class="btn btn-danger btn-sm" href=""><i class="fas fa-trash"></i> Delete</a>
@@ -49,43 +51,45 @@
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <input v-model="form.name" type="text" name="name" placeholder="Enter Name"
-                            class="form-control" :class="{ 'is-invalid': form.errors.has('name') }">
-                        <has-error :form="form" field="name"></has-error>
-                    </div>
-                    <div class="form-group">
-                        <input v-model="form.email" type="email" name="email" placeholder="Email"
-                            class="form-control" :class="{ 'is-invalid': form.errors.has('email') }">
-                        <has-error :form="form" field="email"></has-error>
-                    </div>
-                    <div class="form-group">
-                        <textarea v-model="form.bio" type="text" id="bio" placeholder="Short Bio"
-                            class="form-control" :class="{ 'is-invalid': form.errors.has('bio') }"></textarea>
-                        <has-error :form="form" field="bio"></has-error>
-                    </div>
-                    <div class="form-group">
-                        <select v-model="form.type" type="text" id="type" 
-                            class="form-control" :class="{ 'is-invalid': form.errors.has('type') }">
-                            <option value="">Select User Type</option>
-                            <option value="admin">Admin</option>
-                            <option value="user">Standard User</option>
-                            <option value="author">Author</option>
-                        </select>
-                        <has-error :form="form" field="type"></has-error>
-                    </div>
-                    <div class="form-group">
-                        <input v-model="form.password" type="password" id="password" placeholder="Password"
-                            class="form-control" :class="{ 'is-invalid': form.errors.has('password') }">
-                        <has-error :form="form" field="password"></has-error>
-                    </div>
+                <form @submit.prevent="createUser">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input v-model="form.name" type="text" name="name" placeholder="Enter Name"
+                                class="form-control" :class="{ 'is-invalid': form.errors.has('name') }">
+                            <has-error :form="form" field="name"></has-error>
+                        </div>
+                        <div class="form-group">
+                            <input v-model="form.email" type="email" name="email" placeholder="Email"
+                                class="form-control" :class="{ 'is-invalid': form.errors.has('email') }">
+                            <has-error :form="form" field="email"></has-error>
+                        </div>
+                        <div class="form-group">
+                            <textarea v-model="form.bio" type="text" id="bio" placeholder="Short Bio"
+                                class="form-control" :class="{ 'is-invalid': form.errors.has('bio') }"></textarea>
+                            <has-error :form="form" field="bio"></has-error>
+                        </div>
+                        <div class="form-group">
+                            <select v-model="form.type" type="text" id="type" 
+                                class="form-control" :class="{ 'is-invalid': form.errors.has('type') }">
+                                <option value="">Select User Type</option>
+                                <option value="admin">Admin</option>
+                                <option value="user">Standard User</option>
+                                <option value="author">Author</option>
+                            </select>
+                            <has-error :form="form" field="type"></has-error>
+                        </div>
+                        <div class="form-group">
+                            <input v-model="form.password" type="password" id="password" placeholder="Password"
+                                class="form-control" :class="{ 'is-invalid': form.errors.has('password') }">
+                            <has-error :form="form" field="password"></has-error>
+                        </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Create</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
                 </div>
             </div>
         </div>
@@ -97,19 +101,39 @@
 
         data () {
             return {
-            // Create a new form instance
-            form: new Form({
-                name:'',
-                email:'',
-                password:'',
-                type:'',
-                bio:'',
-                photo:'',
-            })
+                users: {},
+                // Create a new form instance
+                form: new Form({
+                    name:'',
+                    email:'',
+                    password:'',
+                    type:'',
+                    bio:'',
+                    photo:'',
+                })
             }
         },
-        mounted() {
-            console.log('Component mounted.')
+        methods:{
+            loadUsers(){
+                axios.get("api/user").then(({data}) => (this.users=data.data));
+            },
+            createUser(){
+                this.$Progress.start();
+                this.form.post('api/user');
+                Fire.$emit('AfterCreate');
+                $('#add_new').modal('hide');
+                toast.fire({
+                    icon: 'success',
+                    title: 'User Created successfully'
+                })
+                this.$Progress.finish();
+            }
+        },
+        created() {
+            this.loadUsers();
+            Fire.$on('AfterCreate', ()=>{
+                this.loadUsers();
+            })
         }
     }
 </script>
