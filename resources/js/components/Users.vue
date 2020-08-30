@@ -7,7 +7,7 @@
               <h3 class="card-title">Users Table</h3>
 
               <div class="card-tools">
-                <a class="btn btn-success btn-sm" data-toggle="modal" data-target="#add_new" href="">Add New <i class="fas fa-user-plus"></i> </a>
+                <a class="btn btn-success btn-sm" @click="newModel" href="#">Add New <i class="fas fa-user-plus"></i> </a>
               </div>
             </div>
             <!-- /.card-header -->
@@ -29,7 +29,7 @@
                   <td>{{user.type |upText}}</td>
                   <td>{{user.created_at | mydate}}</td>
                   <td>
-                    <a class="btn btn-info btn-sm" href="#"><i class="fas fa-pencil-alt"></i> Edit</a>
+                    <a class="btn btn-info btn-sm" href="#" @click="editModel(user)"><i class="fas fa-pencil-alt"></i> Edit</a>
                     <a class="btn btn-danger btn-sm" href="#"  @click="deleteUser(user.id)"><i class="fas fa-trash"></i> Delete</a>
                   </td>
                 </tr>
@@ -46,12 +46,13 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="add_newLabel">Add New User</h5>
+                    <h5 v-show="!editmode" class="modal-title" id="add_newLabel">Add New User</h5>
+                    <h5 v-show="editmode" class="modal-title" id="add_newLabel">Updtae User's Info</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form @submit.prevent="createUser">
+                <form @submit.prevent="editmode ? updateUser(): createUser()">
                     <div class="modal-body">
                         <div class="form-group">
                             <input v-model="form.name" type="text" name="name" placeholder="Enter Name"
@@ -87,7 +88,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button v-show="editmode" type="submit" class="btn btn-success">Update</button>
+                        <button v-show="!editmode" type="submit" class="btn btn-primary">Create</button>
                     </div>
                 </form>
                 </div>
@@ -101,9 +103,11 @@
 
         data () {
             return {
+                editmode:false,
                 users: {},
                 // Create a new form instance
                 form: new Form({
+                    id:'',
                     name:'',
                     email:'',
                     password:'',
@@ -114,6 +118,36 @@
             }
         },
         methods:{
+            updateUser(){
+                this.$Progress.start();
+                this.form.put("api/user/"+this.form.id)
+                .then(()=>{
+                $('#add_new').modal('hide');
+                    swal.fire(
+                            'Updated!',
+                            'User details Updated.',
+                            'success'
+                            )
+                    this.$Progress.finish();
+                    Fire.$emit('AfterCreate');
+                })
+                .catch(()=>{
+                    this.$Progress.fail();
+
+                });
+            },
+            editModel(user){
+                this.editmode = true;
+                this.form.reset();
+                $('#add_new').modal('show');
+                this.form.fill(user);
+            },
+            newModel(){
+                this.editmode = false;
+                this.form.reset();
+                $('#add_new').modal('show');
+
+            },
             deleteUser(id){
                 swal.fire({
                     title: 'Are you sure?',
