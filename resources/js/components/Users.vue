@@ -29,8 +29,8 @@
                   <td>{{user.type |upText}}</td>
                   <td>{{user.created_at | mydate}}</td>
                   <td>
-                    <a class="btn btn-info btn-sm" href=""><i class="fas fa-pencil-alt"></i> Edit</a>
-                    <a class="btn btn-danger btn-sm" href=""><i class="fas fa-trash"></i> Delete</a>
+                    <a class="btn btn-info btn-sm" href="#"><i class="fas fa-pencil-alt"></i> Edit</a>
+                    <a class="btn btn-danger btn-sm" href="#"  @click="deleteUser(user.id)"><i class="fas fa-trash"></i> Delete</a>
                   </td>
                 </tr>
                 
@@ -114,19 +114,54 @@
             }
         },
         methods:{
+            deleteUser(id){
+                swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                    if (result.value) {
+                        //send request to server
+                        this.form.delete("api/user/"+id)
+                        .then(()=>{
+                            swal.fire(
+                            'Deleted!',
+                            'Your file has been deleted.',
+                            'success'
+                            )
+                            Fire.$emit('AfterCreate');
+                        }).catch(()=>{
+                            swal.fire(
+                            'Failed!',
+                            'Something went wrong.',
+                            'warning'
+                            )
+                        })
+                    }
+                })
+            },
             loadUsers(){
                 axios.get("api/user").then(({data}) => (this.users=data.data));
             },
             createUser(){
                 this.$Progress.start();
-                this.form.post('api/user');
-                Fire.$emit('AfterCreate');
-                $('#add_new').modal('hide');
-                toast.fire({
-                    icon: 'success',
-                    title: 'User Created successfully'
+                this.form.post('api/user')
+                .then(()=>{
+                    Fire.$emit('AfterCreate');
+                    $('#add_new').modal('hide');
+                    toast.fire({
+                        icon: 'success',
+                        title: 'User Created successfully'
+                    })
+                    this.$Progress.finish();
                 })
-                this.$Progress.finish();
+                .catch(()=>{
+
+                })
             }
         },
         created() {
