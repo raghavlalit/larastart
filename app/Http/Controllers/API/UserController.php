@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -45,7 +55,22 @@ class UserController extends Controller
         ]);
     }
 
-    /**
+    public function updateProfile(Request $request)
+    {
+        $user = auth('api')->user();
+        // return $request->photo;
+        if($request->photo){
+            $name = time().'.'.explode('/', explode(':', substr($request->photo, 0, strpos($request->photo, ';')))[1])[1];
+            \Image::make($request->photo)->save(public_path('img/profile/').$name);
+            return ['message', 'success'];
+        }
+        
+    }
+    public function profile()
+    {
+        return auth('api')->user();
+    }
+ /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -55,7 +80,6 @@ class UserController extends Controller
     {
         //
     }
-
     /**
      * Update the specified resource in storage.
      *
