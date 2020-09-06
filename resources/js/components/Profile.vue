@@ -16,19 +16,12 @@
               <h5 class="widget-user-desc">Web Designer</h5>
             </div>
             <div class="widget-user-image">
-              <img class="img-circle" src="" alt="User Avatar">
+              <img class="img-circle" :src="getProfilePhoto()" alt="User Avatar">
             </div>
             <div class="card-footer">
               <div class="row">
-                <div class="col-sm-4 border-right">
-                  <div class="description-block">
-                    <h5 class="description-header">3,200</h5>
-                    <span class="description-text">SALES</span>
-                  </div>
-                  <!-- /.description-block -->
-                </div>
                 <!-- /.col -->
-                <div class="col-sm-4 border-right">
+                <div class="col-sm-6 border-right">
                   <div class="description-block">
                     <h5 class="description-header">13,000</h5>
                     <span class="description-text">FOLLOWERS</span>
@@ -36,7 +29,7 @@
                   <!-- /.description-block -->
                 </div>
                 <!-- /.col -->
-                <div class="col-sm-4">
+                <div class="col-sm-6">
                   <div class="description-block">
                     <h5 class="description-header">35</h5>
                     <span class="description-text">PRODUCTS</span>
@@ -70,19 +63,22 @@
                       <div class="form-group row">
                         <label for="inputName" class="col-sm-2 col-form-label">Name</label>
                         <div class="col-sm-10">
-                          <input type="text" v-model="form.name" class="form-control" id="inputName" placeholder="Name">
+                          <input type="text" v-model="form.name" class="form-control" :class="{ 'is-invalid': form.errors.has('name') }" id="inputName" placeholder="Name">
+                          <has-error :form="form" field="name"></has-error>
                         </div>
                       </div>
                       <div class="form-group row">
                         <label for="inputEmail" class="col-sm-2 col-form-label">Email</label>
                         <div class="col-sm-10">
-                          <input type="email" v-model="form.email" class="form-control" id="inputEmail" placeholder="Email">
+                          <input type="email" v-model="form.email" class="form-control" :class="{ 'is-invalid': form.errors.has('email') }" id="inputEmail" placeholder="Email">
+                          <has-error :form="form" field="email"></has-error>
                         </div>
                       </div>
                       <div class="form-group row">
-                        <label for="inputExperience" class="col-sm-2 col-form-label">Experience</label>
+                        <label for="inputExperience" class="col-sm-2 col-form-label">Bio</label>
                         <div class="col-sm-10">
-                          <textarea class="form-control" id="inputExperience" placeholder="Experience"></textarea>
+                          <textarea v-model="form.bio" class="form-control" :class="{ 'is-invalid': form.errors.has('bio') }" id="inputBio" placeholder="Bio"></textarea>
+                          <has-error :form="form" field="bio"></has-error>
                         </div>
                       </div>
                     <div class="form-group row">
@@ -94,8 +90,9 @@
                     <div class="form-group row">
                         <label for="password" class="col-sm-2 col-form-label">Password</label>
                         <div class="col-sm-10">
-                          <input type="password" class="form-control" id="password">
+                          <input type="password" v-model="form.password" class="form-control" :class="{ 'is-invalid': form.errors.has('password') }" id="password">
                           <small>leave empty if not changing</small>
+                          <has-error :form="form" field="password"></has-error>
                         </div>
                     </div>
                       
@@ -136,18 +133,32 @@
             console.log('Component mounted.')
         },
         methods: {
+          getProfilePhoto(){
+            return "img/profile/"+this.form.photo;
+          },
             updateInfo(){
-                this.form.put('api/profile/')
-                .then(()=>{
-
-                })
-                .catch(()=>{
-
-                });
+              this.$Progress.start();
+              this.form.put('api/profile/')
+              .then(()=>{
+                this.$Progress.finish();
+              })
+              .catch(()=>{
+                this.$Progress.fail();
+              });
             },
             updateProfile(e){
                 let file = e.target.files[0];
                 let reader = new FileReader();
+                if(file['size'] < 2111775){
+
+                }else{
+                  swal.fire({
+                    type : 'Error!',
+                    title: 'Oopsss......',
+                    text : 'You are uploading a large file',
+                    icon : 'warning',
+                  })
+                }
                 reader.onloadend = (file)=>{
                     // console.log('RESULT',reader.result)
                     this.form.photo = reader.result;
